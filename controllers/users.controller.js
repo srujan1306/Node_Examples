@@ -1,5 +1,4 @@
-import { createUser } from "../services/users.service.js";
-import { v4 as uuidv4 } from "uuid";
+import { createUser, getUserByUsername } from "../services/users.service.js";
 import bcrypt from "bcrypt";
 
 const genHashPassword = async (password) => {
@@ -13,21 +12,24 @@ const genHashPassword = async (password) => {
 
 async function createUserCtr(request, response) {
   const data = request.body;
-  data.userId = uuidv4();
-  const hashedPassword = await genHashPassword(data.password);
-  try {
-    const addUser = await createUser({
-      username: data.username,
-      password: hashedPassword,
-      firstname: data.firstname,
-      lastname: data.lastname,
-      userId: data.userId,
-    });
-    response
-      .status(201)
-      .send({ msg: `${data.username} signed up successfully` });
-  } catch (error) {
-    response.status(500).send({ msg: "failed to signup" });
+
+  const userFromDB = await getUserByUsername(data.username);
+  console.log(userFromDB);
+  if (!userFromDB.data) {
+    const hashedPassword = await genHashPassword(data.password);
+    try {
+      await createUser({
+        username: data.username,
+        password: hashedPassword,
+      });
+      response
+        .status(201)
+        .send({ msg: `${data.username} signed up successfully` });
+    } catch (error) {
+      response.status(500).send({ msg: "failed to signup" });
+    }
+  } else {
+    response.status(500).send({ msg: "username already taken" });
   }
 }
 

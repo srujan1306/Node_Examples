@@ -8,23 +8,11 @@ const Users = new Entity(
       service: "UserService",
     },
     attributes: {
-      userId: {
-        type: "string",
-        required: true,
-      },
       username: {
         type: "string",
         required: true,
       },
       password: {
-        type: "string",
-        required: true,
-      },
-      firstname: {
-        type: "string",
-        required: true,
-      },
-      lastname: {
         type: "string",
         required: true,
       },
@@ -34,7 +22,7 @@ const Users = new Entity(
         pk: {
           // highlight-next-line
           field: "pk",
-          facets: ["userId"],
+          facets: ["username"],
         },
         sk: {
           // highlight-next-line
