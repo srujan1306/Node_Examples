@@ -1,5 +1,6 @@
 import { createUser, getUserByUsername } from "../services/users.service.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const genHashPassword = async (password) => {
   const NO_OF_ROUNDS = 10;
@@ -33,4 +34,34 @@ async function createUserCtr(request, response) {
   }
 }
 
-export { createUserCtr };
+async function loginUserCtr(request, response) {
+  const data = request.body;
+  const userFromDB = await getUserByUsername(data.username);
+  if (!userFromDB.data) {
+    response.status(400).send({ msg: `invalid credentials` });
+  } else {
+    const storedDBPassword = userFromDB.data.password;
+    const providedPassword = data.password;
+    const isPasswordCheck = await bcrypt.compare(
+      providedPassword,
+      storedDBPassword
+    );
+    console.log({ providedPassword, storedDBPassword });
+    console.log(isPasswordCheck);
+    if (isPasswordCheck) {
+      var token = jwt.sign(
+        {
+          srujan: userFromDB.data.username,
+        },
+        process.env.SECRET_KEY
+      );
+      console.log(token);
+
+      response.status(200).send({ msg: `login successful`, token });
+    } else {
+      response.status(400).send({ msg: `invalid credentials` });
+    }
+  }
+}
+
+export { createUserCtr, loginUserCtr };
