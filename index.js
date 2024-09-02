@@ -4,7 +4,7 @@ import usersRouter from "./routes/users.route.js";
 import express from "express";
 const app = express();
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 

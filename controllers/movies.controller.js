@@ -6,6 +6,10 @@ import {
   getMoviesById,
   getMovies,
 } from "../services/movies.service.js";
+import { s3 } from "../aws_s3_config.js";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { v4 as uuidv4 } from "uuid";
+
 async function editMovieByIdCtr(request, response) {
   const { id } = request.params;
   const UpdatedData = request.body;
@@ -22,8 +26,35 @@ async function editMovieByIdCtr(request, response) {
 }
 
 async function createMovieByIdCtr(request, response) {
-  const data = request.body;
-  data.movieId = uuidv4();
+  const file = request.file;
+  if (!file) {
+    return response.status(400).json({ error: "No file uploaded." });
+  }
+  const contentType = file.mimetype; // e.g., 'image/jpeg', 'image/png'
+
+  // Prepare the upload parameters
+  const uploadParams = {
+    Bucket: process.env.AWS_S3_BUCKET,
+    Key: `${Date.now().toString()}-${file.originalname}`,
+    Body: file.buffer, // Buffer from multer.memoryStorage
+    ACL: "public-read", // Adjust according to your needs
+    ContentType: contentType, // Set the Content-Type header
+    ContentDisposition: "inline", // Ensure the file is displayed inline
+  };
+  const command = new PutObjectCommand(uploadParams);
+  const image = await s3.send(command);
+  const fileUrl = `https://${process.env.AWS_S3_BUCKET}.s3.amazonaws.com/${uploadParams.Key}`;
+
+  let data = request.body;
+  let updates = {
+    movieId: uuidv4(),
+    poster: fileUrl,
+    rating: Number(data.rating),
+  };
+  data = {
+    ...data, // Spread the existing data properties
+    ...updates, // Spread the updates to override specific properties
+  };
   const addmovie = await createMovie(data);
 
   response.send(addmovie.data);
