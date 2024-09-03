@@ -16,7 +16,7 @@ const upload = multer({
 });
 
 router.get("/", getMoviesCtr);
-router.get("/:id", auth, getMoviesByIdCtr);
+router.get("/:id", getMoviesByIdCtr);
 router.delete("/del/:id", deleteMovieByIdCtr);
 router.post("/", upload.single("file"), createMovieByIdCtr);
 router.put("/:id", editMovieByIdCtr);
